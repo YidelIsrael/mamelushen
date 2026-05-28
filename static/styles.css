@@ -71,73 +71,80 @@ main {
 }
 
 .mark {
-  width: 62px;
-  height: 62px;
-  border-radius: 50%;
-  background: #125d67;
+  width: 82px;
+  height: 82px;
+  border-radius: 0;
+  background: #0d4f58;
   color: #ffffff;
   display: grid;
   place-items: center;
   font-family: "Times New Roman", serif;
-  font-size: 36px;
+  font-size: 54px;
   font-weight: 700;
-  box-shadow: 0 0 0 8px rgba(18, 93, 103, 0.10);
+  box-shadow: 0 0 0 8px rgba(18, 93, 103, 0.10), 0 16px 28px rgba(10, 42, 48, 0.16);
   animation: symbolBreathe 3.8s ease-in-out infinite;
 }
 
 .modern-mark {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   background:
-    radial-gradient(circle at 68% 28%, rgba(72, 178, 207, 0.34), transparent 24px),
-    linear-gradient(145deg, #0d4f58, #16717c 58%, #10464e);
+    radial-gradient(circle at 67% 24%, rgba(44, 124, 135, 0.72), transparent 25px),
+    linear-gradient(145deg, #073e45, #0f6871 58%, #07383f);
+  clip-path: polygon(50% 1%, 82% 13%, 98% 42%, 89% 73%, 59% 90%, 44% 98%, 33% 86%, 12% 78%, 1% 47%, 12% 17%);
   isolation: isolate;
 }
 
 .modern-mark::before {
   content: "";
   position: absolute;
-  inset: 8px;
-  border: 1px solid rgba(255, 226, 143, 0.44);
-  border-radius: 50%;
+  inset: 7px;
+  border: 1px solid rgba(255, 226, 143, 0.28);
+  clip-path: polygon(50% 1%, 82% 13%, 98% 42%, 89% 73%, 59% 90%, 44% 98%, 33% 86%, 12% 78%, 1% 47%, 12% 17%);
 }
 
 .modern-mark::after {
   content: "";
   position: absolute;
-  left: 10px;
-  right: 10px;
-  bottom: 13px;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(255, 226, 143, 0.72), transparent);
+  right: 8px;
+  bottom: 4px;
+  width: 24px;
+  height: 18px;
+  background: #07383f;
+  clip-path: polygon(0 0, 100% 0, 15% 100%);
+  transform: rotate(-5deg);
 }
 
 .mark-letter {
   position: relative;
-  z-index: 3;
-  transform: translate(2px, 1px);
+  z-index: 4;
+  color: #ffffff;
+  line-height: 1;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.16);
+  transform: translate(1px, 1px) scale(1.02);
 }
 
 .voice-bars {
   position: absolute;
-  right: 11px;
-  bottom: 16px;
-  z-index: 4;
+  left: 13px;
+  top: 28px;
+  z-index: 5;
   display: flex;
   align-items: flex-end;
-  gap: 3px;
+  gap: 4px;
 }
 
 .voice-bars i {
-  width: 3px;
+  width: 5px;
   border-radius: 999px;
-  background: #f0c85b;
-  box-shadow: 0 0 8px rgba(240, 200, 91, 0.42);
+  background: linear-gradient(#ffe494, #d6a42f);
+  box-shadow: 0 0 8px rgba(240, 200, 91, 0.50);
 }
 
-.voice-bars i:nth-child(1) { height: 10px; }
-.voice-bars i:nth-child(2) { height: 17px; }
-.voice-bars i:nth-child(3) { height: 13px; }
+.voice-bars i:nth-child(1) { height: 15px; }
+.voice-bars i:nth-child(2) { height: 25px; }
+.voice-bars i:nth-child(3) { height: 35px; }
+.voice-bars i:nth-child(4) { height: 21px; }
 
 .ai-node,
 .ai-line {
@@ -147,41 +154,70 @@ main {
 }
 
 .ai-node {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  background: #6bd5ef;
-  box-shadow: 0 0 10px rgba(107, 213, 239, 0.72);
+  background: #f3c85d;
+  border: 3px solid #0f6871;
+  box-shadow: 0 0 0 2px #ffffff, 0 0 10px rgba(107, 213, 239, 0.42);
 }
 
 .node-one {
-  top: 14px;
-  left: 17px;
+  top: 20px;
+  right: -13px;
 }
 
 .node-two {
-  top: 23px;
-  left: 39px;
+  top: 37px;
+  right: -20px;
+  background: #188de0;
+}
+
+.node-three {
+  top: 55px;
+  right: -13px;
+}
+
+.node-four {
+  top: 68px;
+  right: 2px;
+  background: #188de0;
 }
 
 .ai-line {
-  height: 1px;
-  background: rgba(107, 213, 239, 0.72);
+  height: 4px;
+  background: #ffffff;
+  border-radius: 999px;
   transform-origin: left center;
+  box-shadow: 0 0 0 1px rgba(13, 79, 88, 0.12);
 }
 
 .line-one {
-  top: 18px;
-  left: 22px;
-  width: 21px;
-  transform: rotate(24deg);
+  top: 25px;
+  right: 1px;
+  width: 24px;
+  transform: rotate(-34deg);
 }
 
 .line-two {
-  top: 27px;
-  left: 33px;
-  width: 16px;
-  transform: rotate(-38deg);
+  top: 43px;
+  right: 0;
+  width: 30px;
+  transform: rotate(0);
+}
+
+.line-three {
+  top: 60px;
+  right: 1px;
+  width: 25px;
+  transform: rotate(35deg);
+}
+
+.line-four {
+  top: 70px;
+  right: 14px;
+  width: 13px;
+  transform: rotate(38deg);
 }
 
 .symbol-guide {
