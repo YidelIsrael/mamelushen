@@ -82,6 +82,61 @@ main {
   font-size: 36px;
   font-weight: 700;
   box-shadow: 0 0 0 8px rgba(18, 93, 103, 0.10);
+  animation: symbolBreathe 3.8s ease-in-out infinite;
+}
+
+.symbol-guide {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.symbol-bubble {
+  position: relative;
+  max-width: 310px;
+  background: #fff7dc;
+  border: 1px solid #e5c66d;
+  border-radius: 8px;
+  color: #2c3a28;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.35;
+  padding: 10px 12px;
+  box-shadow: 0 10px 22px rgba(62, 82, 54, 0.10);
+  transform-origin: right center;
+  animation: bubbleFloat 4.5s ease-in-out infinite;
+}
+
+.symbol-bubble::before {
+  content: "";
+  position: absolute;
+  top: 22px;
+  right: -8px;
+  width: 14px;
+  height: 14px;
+  background: #fff7dc;
+  border-top: 1px solid #e5c66d;
+  border-right: 1px solid #e5c66d;
+  transform: rotate(45deg);
+}
+
+.symbol-bubble.talking {
+  animation: bubbleTalk 0.42s ease-in-out 2;
+}
+
+@keyframes symbolBreathe {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 8px rgba(18, 93, 103, 0.10); }
+  50% { transform: scale(1.04); box-shadow: 0 0 0 12px rgba(18, 93, 103, 0.08); }
+}
+
+@keyframes bubbleFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+@keyframes bubbleTalk {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.035); }
 }
 
 h1 {
@@ -325,6 +380,10 @@ audio {
 }
 
 .login-card .mark {
+  flex: 0 0 auto;
+}
+
+.login-card .symbol-guide {
   margin-bottom: 14px;
 }
 
@@ -335,6 +394,25 @@ audio {
 
   .brand-row {
     align-items: flex-start;
+  }
+
+  .symbol-guide {
+    align-items: flex-start;
+  }
+
+  .brand-row .symbol-guide {
+    flex-direction: column;
+  }
+
+  .symbol-bubble {
+    max-width: 230px;
+    font-size: 14px;
+  }
+
+  .brand-row .symbol-bubble::before {
+    top: -8px;
+    right: 24px;
+    transform: rotate(-45deg);
   }
 
   .sentence-card {
