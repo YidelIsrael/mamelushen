@@ -247,7 +247,7 @@ submitButton.addEventListener("click", async () => {
     const result = await response.json();
 
     if (result.ok) {
-      setStatus("געזעיווט: " + result.sample);
+      setStatus("געסעיווט: " + result.sample);
       consentBox.checked = false;
       if (currentMode === "sentence") {
         await getRandomSentence();
