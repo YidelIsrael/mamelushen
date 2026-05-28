@@ -3,45 +3,96 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Yiddish Speech Collection</title>
+  <title>Mamelushen</title>
   <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
+  <div id="loginOverlay" class="login-overlay">
+    <section class="login-card">
+      <div class="mark">מ</div>
+      <h1>Mamelushen</h1>
+      <p>
+        Help build a modern Yiddish speech system by recording clear Yiddish
+        sentences and checking the text before submitting.
+      </p>
+
+      <label for="loginEmail">Email required</label>
+      <input id="loginEmail" type="email" placeholder="you@example.com" autocomplete="email">
+
+      <label for="loginName">Name or nickname</label>
+      <input id="loginName" type="text" placeholder="Example: Yossi">
+
+      <button id="loginButton">Continue</button>
+      <div id="loginStatus" class="status"></div>
+    </section>
+  </div>
+
   <main>
-    <h1>Yiddish Speech Collection</h1>
+    <header class="hero">
+      <div class="brand-row">
+        <div class="mark">מ</div>
+        <div>
+          <h1>Mamelushen</h1>
+          <p>Modern Yiddish voice data, built carefully by real speakers.</p>
+        </div>
+      </div>
+      <div class="goal">
+        The goal is to help Yiddish technology understand natural spoken
+        Yiddish. Every clean recording with corrected text helps train a better
+        speech-to-text system.
+      </div>
+    </header>
 
-    <section class="toolbar">
-      <button id="newSentenceButton">Get Random Sentence</button>
-      <button id="skipButton" class="secondary">Skip</button>
+    <section class="mode-tabs">
+      <button id="sentenceModeButton" class="mode-tab active">Say a Sentence</button>
+      <button id="freeModeButton" class="mode-tab">Record Your Own</button>
     </section>
 
-    <section id="sentenceCard" class="sentence-card">
-      Loading...
-    </section>
-    <div id="sourceLabel" class="source-label"></div>
+    <section id="sentencePanel" class="panel active">
+      <div class="toolbar">
+        <button id="newSentenceButton">Get Random Sentence</button>
+        <button id="skipButton" class="secondary">Skip</button>
+      </div>
 
-    <label for="speaker">Your name or nickname</label>
-    <input id="speaker" type="text" placeholder="Example: Yossi">
-
-    <section class="toolbar">
-      <button id="recordButton">Record</button>
-      <button id="stopButton" class="danger" disabled>Stop</button>
-      <button id="clearButton" class="secondary">Clear</button>
+      <section id="sentenceCard" class="sentence-card">
+        Loading...
+      </section>
+      <div id="sourceLabel" class="source-label"></div>
     </section>
 
-    <div id="status" class="status">Ready.</div>
-    <audio id="audioPreview" controls hidden></audio>
+    <section id="freePanel" class="panel">
+      <section class="free-card">
+        Record any short Yiddish sentence or phrase. After recording, type the
+        exact words you said in the Yiddish text box.
+      </section>
+    </section>
 
-    <label for="transcript">Yiddish text</label>
-    <textarea id="transcript" placeholder="The sentence will appear here. Fix it if needed."></textarea>
+    <section class="recording-card">
+      <div class="account-line">
+        Signed in as <strong id="accountLabel"></strong>
+        <button id="changeAccountButton" class="link-button">Change</button>
+      </div>
 
-    <label class="consent-row">
-      <input id="consent" type="checkbox">
-      I give permission to use this recording for Yiddish speech-to-text training.
-    </label>
+      <section class="toolbar">
+        <button id="recordButton">Record</button>
+        <button id="stopButton" class="danger" disabled>Stop</button>
+        <button id="clearButton" class="secondary">Clear</button>
+      </section>
 
-    <section class="toolbar">
-      <button id="submitButton" disabled>Submit Recording</button>
+      <div id="status" class="status">Ready.</div>
+      <audio id="audioPreview" controls hidden></audio>
+
+      <label for="transcript">Yiddish text / corrected transcription</label>
+      <textarea id="transcript" placeholder="The sentence will appear here, or type the exact words you said."></textarea>
+
+      <label class="consent-row">
+        <input id="consent" type="checkbox">
+        I give permission to use this recording for Yiddish speech-to-text training.
+      </label>
+
+      <section class="toolbar">
+        <button id="submitButton" disabled>Submit Recording</button>
+      </section>
     </section>
   </main>
 

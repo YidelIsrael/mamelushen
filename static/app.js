@@ -1,8 +1,20 @@
+const loginOverlay = document.getElementById("loginOverlay");
+const loginEmail = document.getElementById("loginEmail");
+const loginName = document.getElementById("loginName");
+const loginButton = document.getElementById("loginButton");
+const loginStatus = document.getElementById("loginStatus");
+const accountLabel = document.getElementById("accountLabel");
+const changeAccountButton = document.getElementById("changeAccountButton");
+
+const sentenceModeButton = document.getElementById("sentenceModeButton");
+const freeModeButton = document.getElementById("freeModeButton");
+const sentencePanel = document.getElementById("sentencePanel");
+const freePanel = document.getElementById("freePanel");
+
 const newSentenceButton = document.getElementById("newSentenceButton");
 const skipButton = document.getElementById("skipButton");
 const sentenceCard = document.getElementById("sentenceCard");
 const sourceLabel = document.getElementById("sourceLabel");
-const speakerInput = document.getElementById("speaker");
 const recordButton = document.getElementById("recordButton");
 const stopButton = document.getElementById("stopButton");
 const clearButton = document.getElementById("clearButton");
@@ -14,16 +26,67 @@ const consentBox = document.getElementById("consent");
 
 let currentSentence = "";
 let currentSource = "";
+let currentMode = "sentence";
 let mediaRecorder = null;
 let audioChunks = [];
 let recordedBlob = null;
+
+function emailLooksValid(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function currentUser() {
+  return {
+    email: localStorage.getItem("mamelushen_email") || "",
+    name: localStorage.getItem("mamelushen_name") || ""
+  };
+}
+
+function requireLogin() {
+  const user = currentUser();
+
+  if (emailLooksValid(user.email)) {
+    accountLabel.textContent = user.name ? `${user.name} (${user.email})` : user.email;
+    loginOverlay.classList.add("hidden");
+    return;
+  }
+
+  loginOverlay.classList.remove("hidden");
+}
 
 function setStatus(text) {
   statusBox.textContent = text;
 }
 
 function updateSubmitButton() {
-  submitButton.disabled = !(recordedBlob && transcriptBox.value.trim() && consentBox.checked);
+  submitButton.disabled = !(recordedBlob && transcriptBox.value.trim() && consentBox.checked && emailLooksValid(currentUser().email));
+}
+
+function setMode(mode) {
+  currentMode = mode;
+  const isSentence = mode === "sentence";
+  sentencePanel.classList.toggle("active", isSentence);
+  freePanel.classList.toggle("active", !isSentence);
+  sentenceModeButton.classList.toggle("active", isSentence);
+  freeModeButton.classList.toggle("active", !isSentence);
+
+  recordedBlob = null;
+  audioChunks = [];
+  audioPreview.hidden = true;
+  consentBox.checked = false;
+
+  if (isSentence) {
+    getRandomSentence();
+  } else {
+    currentSentence = "";
+    currentSource = "free-recording";
+    transcriptBox.value = "";
+    sentenceCard.textContent = "";
+    sourceLabel.textContent = "";
+    setStatus("Record your own Yiddish, then type the exact words you said.");
+  }
+
+  updateSubmitButton();
 }
 
 async function getRandomSentence() {
@@ -49,6 +112,28 @@ async function getRandomSentence() {
   setStatus("Read the sentence, then submit.");
   updateSubmitButton();
 }
+
+loginButton.addEventListener("click", () => {
+  const email = loginEmail.value.trim();
+  const name = loginName.value.trim();
+
+  if (!emailLooksValid(email)) {
+    loginStatus.textContent = "Please enter a valid email address.";
+    return;
+  }
+
+  localStorage.setItem("mamelushen_email", email);
+  localStorage.setItem("mamelushen_name", name);
+  loginStatus.textContent = "";
+  requireLogin();
+});
+
+changeAccountButton.addEventListener("click", () => {
+  const user = currentUser();
+  loginEmail.value = user.email;
+  loginName.value = user.name;
+  loginOverlay.classList.remove("hidden");
+});
 
 recordButton.addEventListener("click", async () => {
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -101,11 +186,19 @@ clearButton.addEventListener("click", () => {
   audioChunks = [];
   audioPreview.hidden = true;
   consentBox.checked = false;
+  if (currentMode === "free") transcriptBox.value = "";
   setStatus("Cleared.");
   updateSubmitButton();
 });
 
 submitButton.addEventListener("click", async () => {
+  const user = currentUser();
+
+  if (!emailLooksValid(user.email)) {
+    loginOverlay.classList.remove("hidden");
+    return;
+  }
+
   if (!recordedBlob) {
     setStatus("Record audio first.");
     return;
@@ -136,8 +229,10 @@ submitButton.addEventListener("click", async () => {
       body: JSON.stringify({
         audio: base64Audio,
         text,
-        speaker: speakerInput.value.trim(),
-        source: currentSource,
+        speaker: user.name,
+        email: user.email,
+        mode: currentMode,
+        source: currentMode === "sentence" ? currentSource : "free-recording",
         consent: consentBox.checked
       })
     });
@@ -147,7 +242,15 @@ submitButton.addEventListener("click", async () => {
     if (result.ok) {
       setStatus("Saved: " + result.sample);
       consentBox.checked = false;
-      await getRandomSentence();
+      if (currentMode === "sentence") {
+        await getRandomSentence();
+      } else {
+        recordedBlob = null;
+        audioChunks = [];
+        audioPreview.hidden = true;
+        transcriptBox.value = "";
+        updateSubmitButton();
+      }
     } else {
       setStatus("Submit failed: " + result.error);
       updateSubmitButton();
@@ -157,9 +260,12 @@ submitButton.addEventListener("click", async () => {
   reader.readAsDataURL(recordedBlob);
 });
 
+sentenceModeButton.addEventListener("click", () => setMode("sentence"));
+freeModeButton.addEventListener("click", () => setMode("free"));
 newSentenceButton.addEventListener("click", getRandomSentence);
 skipButton.addEventListener("click", getRandomSentence);
 transcriptBox.addEventListener("input", updateSubmitButton);
 consentBox.addEventListener("change", updateSubmitButton);
 
+requireLogin();
 getRandomSentence();

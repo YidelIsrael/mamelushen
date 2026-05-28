@@ -125,6 +125,8 @@ def add_metadata(row):
             fieldnames=[
                 "sample",
                 "speaker",
+                "email",
+                "mode",
                 "source",
                 "audio",
                 "text_file",
@@ -199,6 +201,8 @@ def submit_recording():
     audio_base64 = payload.get("audio", "")
     text = payload.get("text", "").strip()
     speaker = payload.get("speaker", "").strip()
+    email = payload.get("email", "").strip()
+    mode = payload.get("mode", "").strip()
     source = payload.get("source", "").strip()
     consent = bool(payload.get("consent"))
 
@@ -211,6 +215,9 @@ def submit_recording():
     if not consent:
         return jsonify({"ok": False, "error": "Permission checkbox is required."}), 400
 
+    if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email):
+        return jsonify({"ok": False, "error": "A valid email is required."}), 400
+
     TEXT_FOLDER.mkdir(parents=True, exist_ok=True)
 
     sample_number = next_sample_number()
@@ -222,6 +229,8 @@ def submit_recording():
     add_metadata({
         "sample": sample_name,
         "speaker": speaker,
+        "email": email,
+        "mode": mode,
         "source": source,
         "audio": str(audio_path.relative_to(UPLOAD_FOLDER)).replace("\\", "/"),
         "text_file": str(text_path.relative_to(UPLOAD_FOLDER)).replace("\\", "/"),
