@@ -23,6 +23,7 @@ const statusBox = document.getElementById("status");
 const audioPreview = document.getElementById("audioPreview");
 const transcriptBox = document.getElementById("transcript");
 const consentBox = document.getElementById("consent");
+const meter = document.getElementById("meter");
 
 let currentSentence = "";
 let currentSource = "";
@@ -83,33 +84,36 @@ function setMode(mode) {
     transcriptBox.value = "";
     sentenceCard.textContent = "";
     sourceLabel.textContent = "";
-    setStatus("Record your own Yiddish, then type the exact words you said.");
+    setStatus("רעקארדיר דיין אייגענע אידיש, נאכדעם שרייב גענוי וואס דו האסט געזאגט.");
   }
 
   updateSubmitButton();
 }
 
 async function getRandomSentence() {
-  setStatus("Loading sentence...");
+  setStatus("לאדט א נייעם זאץ...");
+  sentenceCard.classList.add("loading");
 
   const response = await fetch("/api/random-sentence");
   const result = await response.json();
 
   if (!result.ok) {
-    setStatus(result.error || "Could not load a sentence.");
-    sentenceCard.textContent = "No sentence found.";
+    setStatus(result.error || "מען קען נישט לאדן א זאץ.");
+    sentenceCard.textContent = "מען האט נישט געטראפן קיין זאץ.";
+    sentenceCard.classList.remove("loading");
     return;
   }
 
   currentSentence = result.sentence;
   currentSource = result.source;
   sentenceCard.textContent = currentSentence;
-  sourceLabel.textContent = "From: " + currentSource;
+  sourceLabel.textContent = "מקור: " + currentSource;
   transcriptBox.value = currentSentence;
   recordedBlob = null;
   audioChunks = [];
   audioPreview.hidden = true;
-  setStatus("Read the sentence, then submit.");
+  sentenceCard.classList.remove("loading");
+  setStatus("לייען דעם זאץ, נאכדעם שיק אריין.");
   updateSubmitButton();
 }
 
@@ -118,7 +122,7 @@ loginButton.addEventListener("click", () => {
   const name = loginName.value.trim();
 
   if (!emailLooksValid(email)) {
-    loginStatus.textContent = "Please enter a valid email address.";
+    loginStatus.textContent = "ביטע שרייב א ריכטיגע אימעיל אדרעס.";
     return;
   }
 
@@ -137,7 +141,7 @@ changeAccountButton.addEventListener("click", () => {
 
 recordButton.addEventListener("click", async () => {
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    setStatus("Microphone recording is not available in this browser.");
+    setStatus("מייקראפאן רעקארדירונג ארבעט נישט אין דעם בראוזער.");
     return;
   }
 
@@ -146,7 +150,7 @@ recordButton.addEventListener("click", async () => {
   try {
     stream = await navigator.mediaDevices.getUserMedia({ audio: true });
   } catch (error) {
-    setStatus("Microphone blocked or not found. Please allow the microphone.");
+    setStatus("דער מייקראפאן איז פארמאכט אדער נישט געפונען. ביטע לאז צו דעם מייקראפאן.");
     return;
   }
 
@@ -161,7 +165,8 @@ recordButton.addEventListener("click", async () => {
     audioPreview.src = URL.createObjectURL(recordedBlob);
     audioPreview.hidden = false;
     stream.getTracks().forEach(track => track.stop());
-    setStatus("Recording ready. Listen back if you want, then submit.");
+    meter.classList.remove("recording");
+    setStatus("די רעקארדירונג איז גרייט. הער איבער אויב דו ווילסט, נאכדעם שיק אריין.");
     updateSubmitButton();
   };
 
@@ -169,7 +174,8 @@ recordButton.addEventListener("click", async () => {
   recordButton.disabled = true;
   stopButton.disabled = false;
   submitButton.disabled = true;
-  setStatus("Recording...");
+  meter.classList.add("recording");
+  setStatus("רעקארדירט...");
 });
 
 stopButton.addEventListener("click", () => {
@@ -179,6 +185,7 @@ stopButton.addEventListener("click", () => {
 
   recordButton.disabled = false;
   stopButton.disabled = true;
+  meter.classList.remove("recording");
 });
 
 clearButton.addEventListener("click", () => {
@@ -187,7 +194,7 @@ clearButton.addEventListener("click", () => {
   audioPreview.hidden = true;
   consentBox.checked = false;
   if (currentMode === "free") transcriptBox.value = "";
-  setStatus("Cleared.");
+  setStatus("אויסגעמעקט.");
   updateSubmitButton();
 });
 
@@ -200,24 +207,24 @@ submitButton.addEventListener("click", async () => {
   }
 
   if (!recordedBlob) {
-    setStatus("Record audio first.");
+    setStatus("קודם רעקארדיר אודיא.");
     return;
   }
 
   const text = transcriptBox.value.trim();
 
   if (!text) {
-    setStatus("Text is missing.");
+    setStatus("עס פעלט טעקסט.");
     return;
   }
 
   if (!consentBox.checked) {
-    setStatus("Please check the permission box.");
+    setStatus("ביטע צייכן אן דעם רשות קעסטל.");
     return;
   }
 
   submitButton.disabled = true;
-  setStatus("Submitting...");
+  setStatus("שיקט אריין...");
 
   const reader = new FileReader();
 
@@ -240,7 +247,7 @@ submitButton.addEventListener("click", async () => {
     const result = await response.json();
 
     if (result.ok) {
-      setStatus("Saved: " + result.sample);
+      setStatus("געזעיווט: " + result.sample);
       consentBox.checked = false;
       if (currentMode === "sentence") {
         await getRandomSentence();
@@ -252,7 +259,7 @@ submitButton.addEventListener("click", async () => {
         updateSubmitButton();
       }
     } else {
-      setStatus("Submit failed: " + result.error);
+      setStatus("שיקן איז דורכגעפאלן: " + result.error);
       updateSubmitButton();
     }
   };

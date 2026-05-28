@@ -1,28 +1,32 @@
 <!doctype html>
-<html lang="en">
+<html lang="yi" dir="rtl">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Mamelushen</title>
+  <title>מאמע־לשון</title>
   <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
+  <div class="ambient-wave" aria-hidden="true">
+    <span></span><span></span><span></span><span></span><span></span>
+  </div>
+
   <div id="loginOverlay" class="login-overlay">
     <section class="login-card">
       <div class="mark">מ</div>
-      <h1>Mamelushen</h1>
+      <h1>מאמע־לשון</h1>
       <p>
-        Help build a modern Yiddish speech system by recording clear Yiddish
-        sentences and checking the text before submitting.
+        העלף בויען א מאדערנע אידישע שטימע־טעכנאלאגיע. נעם אויף קלארע
+        אידישע זאצן און קוק איבער די ווערטער פאר'ן שיקן.
       </p>
 
-      <label for="loginEmail">Email required</label>
-      <input id="loginEmail" type="email" placeholder="you@example.com" autocomplete="email">
+      <label for="loginEmail">אימעיל איז פארלאנגט</label>
+      <input id="loginEmail" type="email" placeholder="you@example.com" autocomplete="email" dir="ltr">
 
-      <label for="loginName">Name or nickname</label>
-      <input id="loginName" type="text" placeholder="Example: Yossi">
+      <label for="loginName">נאמען אדער צונאמען</label>
+      <input id="loginName" type="text" placeholder="למשל: יוסי">
 
-      <button id="loginButton">Continue</button>
+      <button id="loginButton">ווייטער</button>
       <div id="loginStatus" class="status"></div>
     </section>
   </div>
@@ -32,66 +36,70 @@
       <div class="brand-row">
         <div class="mark">מ</div>
         <div>
-          <h1>Mamelushen</h1>
-          <p>Modern Yiddish voice data, built carefully by real speakers.</p>
+          <h1>מאמע־לשון</h1>
+          <p>אידישע שטימע־דאטא, געבויט מיט מענטשן וואס רעדן טאקע אידיש.</p>
         </div>
       </div>
       <div class="goal">
-        The goal is to help Yiddish technology understand natural spoken
-        Yiddish. Every clean recording with corrected text helps train a better
-        speech-to-text system.
+        דער ציל איז צו העלפן טעכנאלאגיע פארשטיין נאטירליכע גערעדטע אידיש.
+        יעדע קלארע רעקארדירונג מיט ריכטיגע טעקסט מאכט דעם אידישן
+        speech-to-text בעסער.
       </div>
     </header>
 
-    <section class="mode-tabs">
-      <button id="sentenceModeButton" class="mode-tab active">Say a Sentence</button>
-      <button id="freeModeButton" class="mode-tab">Record Your Own</button>
+    <section class="mode-tabs" aria-label="אויסוועלן וועג">
+      <button id="sentenceModeButton" class="mode-tab active">זאג א זאץ</button>
+      <button id="freeModeButton" class="mode-tab">רעקארדיר דיין אייגענע</button>
     </section>
 
     <section id="sentencePanel" class="panel active">
       <div class="toolbar">
-        <button id="newSentenceButton">Get Random Sentence</button>
-        <button id="skipButton" class="secondary">Skip</button>
+        <button id="newSentenceButton">נייער זאץ</button>
+        <button id="skipButton" class="secondary">סקיפ</button>
       </div>
 
-      <section id="sentenceCard" class="sentence-card">
-        Loading...
+      <section id="sentenceCard" class="sentence-card loading">
+        לאדט...
       </section>
       <div id="sourceLabel" class="source-label"></div>
     </section>
 
     <section id="freePanel" class="panel">
       <section class="free-card">
-        Record any short Yiddish sentence or phrase. After recording, type the
-        exact words you said in the Yiddish text box.
+        רעקארדיר א קורצן אידישן זאץ אדער פראזע. נאכדעם שרייב אריין
+        גענוי די ווערטער וואס דו האסט געזאגט.
       </section>
     </section>
 
     <section class="recording-card">
       <div class="account-line">
-        Signed in as <strong id="accountLabel"></strong>
-        <button id="changeAccountButton" class="link-button">Change</button>
+        אריינגעלאגט אלס <strong id="accountLabel"></strong>
+        <button id="changeAccountButton" class="link-button">טויש</button>
+      </div>
+
+      <div id="meter" class="meter" aria-hidden="true">
+        <i></i><i></i><i></i><i></i><i></i><i></i><i></i>
       </div>
 
       <section class="toolbar">
-        <button id="recordButton">Record</button>
-        <button id="stopButton" class="danger" disabled>Stop</button>
-        <button id="clearButton" class="secondary">Clear</button>
+        <button id="recordButton">רעקארד</button>
+        <button id="stopButton" class="danger" disabled>סטאפ</button>
+        <button id="clearButton" class="secondary">מעק אויס</button>
       </section>
 
-      <div id="status" class="status">Ready.</div>
+      <div id="status" class="status">גרייט.</div>
       <audio id="audioPreview" controls hidden></audio>
 
-      <label for="transcript">Yiddish text / corrected transcription</label>
-      <textarea id="transcript" placeholder="The sentence will appear here, or type the exact words you said."></textarea>
+      <label for="transcript">אידישע טעקסט / פארראכטענע טרענסקריפציע</label>
+      <textarea id="transcript" placeholder="דער זאץ וועט דא ערשיינען, אדער שרייב גענוי וואס דו האסט געזאגט."></textarea>
 
       <label class="consent-row">
         <input id="consent" type="checkbox">
-        I give permission to use this recording for Yiddish speech-to-text training.
+        איך געב רשות צו נוצן די רעקארדירונג פאר אידישע speech-to-text טרענירונג.
       </label>
 
       <section class="toolbar">
-        <button id="submitButton" disabled>Submit Recording</button>
+        <button id="submitButton" disabled>שיק אריין</button>
       </section>
     </section>
   </main>
