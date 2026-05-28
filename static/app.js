@@ -24,7 +24,6 @@ const audioPreview = document.getElementById("audioPreview");
 const transcriptBox = document.getElementById("transcript");
 const consentBox = document.getElementById("consent");
 const meter = document.getElementById("meter");
-const symbolBubble = document.getElementById("symbolBubble");
 
 let currentSentence = "";
 let currentSource = "";
@@ -32,15 +31,6 @@ let currentMode = "sentence";
 let mediaRecorder = null;
 let audioChunks = [];
 let recordedBlob = null;
-let symbolTimer = null;
-
-const symbolMessages = [
-  "איך בין דא מיט דיר. לאמיר נעמען איין קלארן זאץ.",
-  "רעד פשוט און נאטירליך, אזוי ווי דו רעדסט יעדן טאג.",
-  "יעדע רעקארדירונג העלפט די מאמע־לשון וואקסן.",
-  "קוק איבער די ווערטער פאר'ן שיקן. ריכטיגקייט איז וויכטיג.",
-  "אויב דער זאץ איז שווער, דריק סקיפ און נעם א נייעם."
-];
 
 function emailLooksValid(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -69,26 +59,6 @@ function setStatus(text) {
   statusBox.textContent = text;
 }
 
-function symbolSay(text) {
-  if (!symbolBubble) return;
-
-  symbolBubble.textContent = text;
-  symbolBubble.classList.remove("talking");
-  void symbolBubble.offsetWidth;
-  symbolBubble.classList.add("talking");
-}
-
-function startSymbolMessages() {
-  if (!symbolBubble || symbolTimer) return;
-
-  let messageIndex = 0;
-  symbolTimer = setInterval(() => {
-    if (mediaRecorder && mediaRecorder.state === "recording") return;
-    messageIndex = (messageIndex + 1) % symbolMessages.length;
-    symbolSay(symbolMessages[messageIndex]);
-  }, 9000);
-}
-
 function updateSubmitButton() {
   submitButton.disabled = !(recordedBlob && transcriptBox.value.trim() && consentBox.checked && emailLooksValid(currentUser().email));
 }
@@ -107,7 +77,6 @@ function setMode(mode) {
   consentBox.checked = false;
 
   if (isSentence) {
-    symbolSay("איך וועל דיר געבן א זאץ. ליין עס קלאר און רואיג.");
     getRandomSentence();
   } else {
     currentSentence = "";
@@ -116,7 +85,6 @@ function setMode(mode) {
     sentenceCard.textContent = "";
     sourceLabel.textContent = "";
     setStatus("רעקארדיר דיין אייגענע אידיש, נאכדעם שרייב גענוי וואס דו האסט געזאגט.");
-    symbolSay("יעצט קענסטו זאגן דיין אייגענע זאץ. שרייב עס נאכדעם גענוי.");
   }
 
   updateSubmitButton();
@@ -124,7 +92,6 @@ function setMode(mode) {
 
 async function getRandomSentence() {
   setStatus("לאדט א נייעם זאץ...");
-  symbolSay("איך זוך יעצט א גוטן זאץ פאר דיר...");
   sentenceCard.classList.add("loading");
 
   const response = await fetch("/api/random-sentence");
@@ -147,7 +114,6 @@ async function getRandomSentence() {
   audioPreview.hidden = true;
   sentenceCard.classList.remove("loading");
   setStatus("לייען דעם זאץ, נאכדעם שיק אריין.");
-  symbolSay("גרייט. ליין דעם זאץ ווי א מענטש רעדט עס טאקע.");
   updateSubmitButton();
 }
 
@@ -164,7 +130,6 @@ loginButton.addEventListener("click", () => {
   localStorage.setItem("mamelushen_name", name);
   loginStatus.textContent = "";
   requireLogin();
-  symbolSay("שלום עליכם. מיר קענען אנהייבן.");
 });
 
 changeAccountButton.addEventListener("click", () => {
@@ -202,7 +167,6 @@ recordButton.addEventListener("click", async () => {
     stream.getTracks().forEach(track => track.stop());
     meter.classList.remove("recording");
     setStatus("די רעקארדירונג איז גרייט. הער איבער אויב דו ווילסט, נאכדעם שיק אריין.");
-    symbolSay("שיין. יעצט קוק איבער די טעקסט און שיק עס אריין.");
     updateSubmitButton();
   };
 
@@ -212,7 +176,6 @@ recordButton.addEventListener("click", async () => {
   submitButton.disabled = true;
   meter.classList.add("recording");
   setStatus("רעקארדירט...");
-  symbolSay("איך הער. רעד קלאר, אבער נאטירליך.");
 });
 
 stopButton.addEventListener("click", () => {
@@ -232,7 +195,6 @@ clearButton.addEventListener("click", () => {
   consentBox.checked = false;
   if (currentMode === "free") transcriptBox.value = "";
   setStatus("אויסגעמעקט.");
-  symbolSay("אויסגעמעקט. מען קען אנהייבן נאכאמאל.");
   updateSubmitButton();
 });
 
@@ -286,7 +248,6 @@ submitButton.addEventListener("click", async () => {
 
     if (result.ok) {
       setStatus("געסעיווט: " + result.sample);
-      symbolSay("געסעיווט. יישר כח, דאס העלפט זייער.");
       consentBox.checked = false;
       if (currentMode === "sentence") {
         await getRandomSentence();
@@ -299,7 +260,6 @@ submitButton.addEventListener("click", async () => {
       }
     } else {
       setStatus("שיקן איז דורכגעפאלן: " + result.error);
-      symbolSay("עס איז נישט דורך. פרוביר נאכאמאל אין א מינוט.");
       updateSubmitButton();
     }
   };
@@ -316,4 +276,3 @@ consentBox.addEventListener("change", updateSubmitButton);
 
 requireLogin();
 getRandomSentence();
-startSymbolMessages();
