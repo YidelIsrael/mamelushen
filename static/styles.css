@@ -85,6 +85,105 @@ main {
   animation: symbolBreathe 3.8s ease-in-out infinite;
 }
 
+.modern-mark {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 68% 28%, rgba(72, 178, 207, 0.34), transparent 24px),
+    linear-gradient(145deg, #0d4f58, #16717c 58%, #10464e);
+  isolation: isolate;
+}
+
+.modern-mark::before {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border: 1px solid rgba(255, 226, 143, 0.44);
+  border-radius: 50%;
+}
+
+.modern-mark::after {
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 13px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255, 226, 143, 0.72), transparent);
+}
+
+.mark-letter {
+  position: relative;
+  z-index: 3;
+  transform: translate(2px, 1px);
+}
+
+.voice-bars {
+  position: absolute;
+  right: 11px;
+  bottom: 16px;
+  z-index: 4;
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.voice-bars i {
+  width: 3px;
+  border-radius: 999px;
+  background: #f0c85b;
+  box-shadow: 0 0 8px rgba(240, 200, 91, 0.42);
+}
+
+.voice-bars i:nth-child(1) { height: 10px; }
+.voice-bars i:nth-child(2) { height: 17px; }
+.voice-bars i:nth-child(3) { height: 13px; }
+
+.ai-node,
+.ai-line {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.ai-node {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #6bd5ef;
+  box-shadow: 0 0 10px rgba(107, 213, 239, 0.72);
+}
+
+.node-one {
+  top: 14px;
+  left: 17px;
+}
+
+.node-two {
+  top: 23px;
+  left: 39px;
+}
+
+.ai-line {
+  height: 1px;
+  background: rgba(107, 213, 239, 0.72);
+  transform-origin: left center;
+}
+
+.line-one {
+  top: 18px;
+  left: 22px;
+  width: 21px;
+  transform: rotate(24deg);
+}
+
+.line-two {
+  top: 27px;
+  left: 33px;
+  width: 16px;
+  transform: rotate(-38deg);
+}
+
 .symbol-guide {
   display: flex;
   align-items: center;
