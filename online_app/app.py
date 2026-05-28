@@ -1,0 +1,242 @@
+from pathlib import Path
+import base64
+import csv
+import json
+import os
+import random
+import re
+import shutil
+import subprocess
+import time
+
+from flask import Flask, jsonify, request, send_from_directory
+
+
+BASE_FOLDER = Path(__file__).parent
+SPEECH_BANK_FOLDER = BASE_FOLDER / "speech_bank"
+UPLOAD_FOLDER = BASE_FOLDER / "uploads"
+AUDIO_FOLDER = UPLOAD_FOLDER / "audio"
+TEXT_FOLDER = UPLOAD_FOLDER / "text"
+METADATA_FILE = UPLOAD_FOLDER / "metadata.csv"
+TEMP_FOLDER = UPLOAD_FOLDER / "temp"
+
+app = Flask(__name__, static_folder="static")
+
+
+def split_long_piece_by_commas(piece, max_words=16):
+    piece = piece.strip()
+    if not piece:
+        return []
+
+    parts = re.split(r"(?<=[,،])\s+", piece)
+    chunks = []
+    current = []
+
+    for part in parts:
+        words = part.split()
+        current_words = " ".join(current).split()
+
+        if current and len(current_words) + len(words) > max_words:
+            chunks.append(" ".join(current).strip())
+            current = [part]
+        else:
+            current.append(part)
+
+    if current:
+        chunks.append(" ".join(current).strip())
+
+    final_chunks = []
+
+    for chunk in chunks:
+        words = chunk.split()
+
+        if len(words) <= max_words + 4:
+            final_chunks.append(chunk)
+            continue
+
+        for start in range(0, len(words), max_words):
+            final_chunks.append(" ".join(words[start:start + max_words]))
+
+    return [chunk for chunk in final_chunks if chunk]
+
+
+def split_text_into_sentences(text, max_words=16):
+    text = " ".join(text.split())
+    if not text:
+        return []
+
+    sentence_pieces = re.split(r"(?<=[.!?׃:;؟])\s+", text)
+    sentences = []
+
+    for piece in sentence_pieces:
+        piece = piece.strip()
+        if not piece:
+            continue
+
+        words = piece.split()
+
+        if len(words) <= max_words + 4:
+            sentences.append(piece)
+        else:
+            sentences.extend(split_long_piece_by_commas(piece, max_words=max_words))
+
+    return [sentence.strip() for sentence in sentences if sentence.strip()]
+
+
+def all_sentence_choices():
+    choices = []
+    SPEECH_BANK_FOLDER.mkdir(parents=True, exist_ok=True)
+
+    for speech_path in sorted(SPEECH_BANK_FOLDER.glob("*.txt")):
+        text = speech_path.read_text(encoding="utf-8-sig")
+        for sentence in split_text_into_sentences(text):
+            choices.append({
+                "source": speech_path.name,
+                "sentence": sentence,
+            })
+
+    return choices
+
+
+def next_sample_number():
+    AUDIO_FOLDER.mkdir(parents=True, exist_ok=True)
+    existing_numbers = []
+
+    for audio_file in AUDIO_FOLDER.glob("sample_*.*"):
+        try:
+            number = int(audio_file.stem.split("_")[1])
+            existing_numbers.append(number)
+        except (IndexError, ValueError):
+            pass
+
+    if not existing_numbers:
+        return 1
+
+    return max(existing_numbers) + 1
+
+
+def add_metadata(row):
+    UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
+    file_exists = METADATA_FILE.exists()
+
+    with METADATA_FILE.open("a", encoding="utf-8-sig", newline="") as file:
+        writer = csv.DictWriter(
+            file,
+            fieldnames=[
+                "sample",
+                "speaker",
+                "source",
+                "audio",
+                "text_file",
+                "text",
+                "created_at",
+            ],
+        )
+
+        if not file_exists:
+            writer.writeheader()
+
+        writer.writerow(row)
+
+
+def save_audio(audio_base64, sample_name):
+    AUDIO_FOLDER.mkdir(parents=True, exist_ok=True)
+    TEMP_FOLDER.mkdir(parents=True, exist_ok=True)
+
+    webm_path = TEMP_FOLDER / f"{sample_name}.webm"
+    wav_path = AUDIO_FOLDER / f"{sample_name}.wav"
+
+    webm_path.write_bytes(base64.b64decode(audio_base64))
+
+    ffmpeg = shutil.which("ffmpeg")
+
+    if ffmpeg:
+        subprocess.run(
+            [
+                ffmpeg,
+                "-y",
+                "-i",
+                str(webm_path),
+                "-ac",
+                "1",
+                "-ar",
+                "16000",
+                str(wav_path),
+            ],
+            check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        webm_path.unlink(missing_ok=True)
+        return wav_path
+
+    final_webm_path = AUDIO_FOLDER / f"{sample_name}.webm"
+    shutil.move(str(webm_path), str(final_webm_path))
+    return final_webm_path
+
+
+@app.get("/")
+def index():
+    return send_from_directory(app.static_folder, "index.html")
+
+
+@app.get("/api/random-sentence")
+def random_sentence():
+    choices = all_sentence_choices()
+
+    if not choices:
+        return jsonify({
+            "ok": False,
+            "error": "No speech text files were found.",
+        }), 404
+
+    return jsonify({"ok": True, **random.choice(choices)})
+
+
+@app.post("/api/submit")
+def submit_recording():
+    payload = request.get_json(force=True)
+    audio_base64 = payload.get("audio", "")
+    text = payload.get("text", "").strip()
+    speaker = payload.get("speaker", "").strip()
+    source = payload.get("source", "").strip()
+    consent = bool(payload.get("consent"))
+
+    if not audio_base64:
+        return jsonify({"ok": False, "error": "No audio was uploaded."}), 400
+
+    if not text:
+        return jsonify({"ok": False, "error": "No Yiddish text was included."}), 400
+
+    if not consent:
+        return jsonify({"ok": False, "error": "Permission checkbox is required."}), 400
+
+    TEXT_FOLDER.mkdir(parents=True, exist_ok=True)
+
+    sample_number = next_sample_number()
+    sample_name = f"sample_{sample_number:06d}"
+    audio_path = save_audio(audio_base64, sample_name)
+    text_path = TEXT_FOLDER / f"{sample_name}.txt"
+    text_path.write_text(text, encoding="utf-8")
+
+    add_metadata({
+        "sample": sample_name,
+        "speaker": speaker,
+        "source": source,
+        "audio": str(audio_path.relative_to(UPLOAD_FOLDER)).replace("\\", "/"),
+        "text_file": str(text_path.relative_to(UPLOAD_FOLDER)).replace("\\", "/"),
+        "text": text,
+        "created_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+    })
+
+    return jsonify({"ok": True, "sample": sample_name})
+
+
+@app.get("/health")
+def health():
+    return jsonify({"ok": True})
+
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", "8765"))
+    app.run(host="0.0.0.0", port=port)

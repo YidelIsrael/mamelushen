@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Yiddish Speech Collection</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <main>
+    <h1>Yiddish Speech Collection</h1>
+
+    <section class="toolbar">
+      <button id="newSentenceButton">Get Random Sentence</button>
+      <button id="skipButton" class="secondary">Skip</button>
+    </section>
+
+    <section id="sentenceCard" class="sentence-card">
+      Loading...
+    </section>
+    <div id="sourceLabel" class="source-label"></div>
+
+    <label for="speaker">Your name or nickname</label>
+    <input id="speaker" type="text" placeholder="Example: Yossi">
+
+    <section class="toolbar">
+      <button id="recordButton">Record</button>
+      <button id="stopButton" class="danger" disabled>Stop</button>
+      <button id="clearButton" class="secondary">Clear</button>
+    </section>
+
+    <div id="status" class="status">Ready.</div>
+    <audio id="audioPreview" controls hidden></audio>
+
+    <label for="transcript">Yiddish text</label>
+    <textarea id="transcript" placeholder="The sentence will appear here. Fix it if needed."></textarea>
+
+    <label class="consent-row">
+      <input id="consent" type="checkbox">
+      I give permission to use this recording for Yiddish speech-to-text training.
+    </label>
+
+    <section class="toolbar">
+      <button id="submitButton" disabled>Submit Recording</button>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
