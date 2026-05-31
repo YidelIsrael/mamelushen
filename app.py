@@ -8,19 +8,40 @@ import re
 import shutil
 import subprocess
 import time
+import zipfile
+from io import BytesIO
 
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, request, send_file, send_from_directory
 
 
 BASE_FOLDER = Path(__file__).parent
 SPEECH_BANK_FOLDER = BASE_FOLDER / "speech_bank"
-UPLOAD_FOLDER = BASE_FOLDER / "uploads"
+UPLOAD_FOLDER = Path(os.environ.get("MAMELUSHEN_UPLOAD_FOLDER", BASE_FOLDER / "uploads"))
 AUDIO_FOLDER = UPLOAD_FOLDER / "audio"
 TEXT_FOLDER = UPLOAD_FOLDER / "text"
 METADATA_FILE = UPLOAD_FOLDER / "metadata.csv"
 TEMP_FOLDER = UPLOAD_FOLDER / "temp"
+ADMIN_PASSWORD = os.environ.get("MAMELUSHEN_ADMIN_PASSWORD", "")
 
 app = Flask(__name__, static_folder="static")
+
+
+def admin_allowed():
+    if not ADMIN_PASSWORD:
+        return False
+
+    password = request.args.get("password", "") or request.headers.get("X-Admin-Password", "")
+    return password == ADMIN_PASSWORD
+
+
+def require_admin():
+    if admin_allowed():
+        return None
+
+    return jsonify({
+        "ok": False,
+        "error": "Admin password is missing or wrong.",
+    }), 401
 
 
 def split_long_piece_by_commas(piece, max_words=16):
@@ -141,6 +162,52 @@ def add_metadata(row):
         writer.writerow(row)
 
 
+def read_metadata_rows():
+    if not METADATA_FILE.exists():
+        return []
+
+    with METADATA_FILE.open("r", encoding="utf-8-sig", newline="") as file:
+        return list(csv.DictReader(file))
+
+
+def upload_summary():
+    rows = read_metadata_rows()
+    audio_count = len(list(AUDIO_FOLDER.glob("*"))) if AUDIO_FOLDER.exists() else 0
+    text_count = len(list(TEXT_FOLDER.glob("*.txt"))) if TEXT_FOLDER.exists() else 0
+
+    latest_rows = rows[-20:]
+    latest_rows.reverse()
+
+    return {
+        "ok": True,
+        "upload_folder": str(UPLOAD_FOLDER),
+        "metadata_exists": METADATA_FILE.exists(),
+        "total_metadata_rows": len(rows),
+        "audio_files": audio_count,
+        "text_files": text_count,
+        "latest": latest_rows,
+    }
+
+
+def make_dataset_zip():
+    memory_file = BytesIO()
+
+    with zipfile.ZipFile(memory_file, "w", zipfile.ZIP_DEFLATED) as archive:
+        if METADATA_FILE.exists():
+            archive.write(METADATA_FILE, "metadata.csv")
+
+        for folder, folder_name in [(AUDIO_FOLDER, "audio"), (TEXT_FOLDER, "text")]:
+            if not folder.exists():
+                continue
+
+            for path in sorted(folder.glob("*")):
+                if path.is_file():
+                    archive.write(path, f"{folder_name}/{path.name}")
+
+    memory_file.seek(0)
+    return memory_file
+
+
 def save_audio(audio_base64, sample_name):
     AUDIO_FOLDER.mkdir(parents=True, exist_ok=True)
     TEMP_FOLDER.mkdir(parents=True, exist_ok=True)
@@ -180,6 +247,11 @@ def save_audio(audio_base64, sample_name):
 @app.get("/")
 def index():
     return send_from_directory(app.static_folder, "index.html")
+
+
+@app.get("/admin")
+def admin_page():
+    return send_from_directory(app.static_folder, "admin.html")
 
 
 @app.get("/api/random-sentence")
@@ -239,6 +311,30 @@ def submit_recording():
     })
 
     return jsonify({"ok": True, "sample": sample_name})
+
+
+@app.get("/api/admin/summary")
+def admin_summary():
+    blocked = require_admin()
+    if blocked:
+        return blocked
+
+    return jsonify(upload_summary())
+
+
+@app.get("/api/admin/download-dataset")
+def admin_download_dataset():
+    blocked = require_admin()
+    if blocked:
+        return blocked
+
+    filename = f"mamelushen_uploads_{time.strftime('%Y%m%d_%H%M%S')}.zip"
+    return send_file(
+        make_dataset_zip(),
+        mimetype="application/zip",
+        as_attachment=True,
+        download_name=filename,
+    )
 
 
 @app.get("/health")

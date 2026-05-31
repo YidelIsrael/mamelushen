@@ -36,6 +36,34 @@ uploads/text
 uploads/metadata.csv
 ```
 
+## Admin Download
+
+Set this environment variable on the server:
+
+```text
+MAMELUSHEN_ADMIN_PASSWORD
+```
+
+Then open:
+
+```text
+/admin
+```
+
+Use the password to check counts and download all recordings as a zip.
+
+For Render, add a Persistent Disk and set:
+
+```text
+MAMELUSHEN_UPLOAD_FOLDER=/var/data/uploads
+```
+
+Mount the disk at:
+
+```text
+/var/data
+```
+
 ## Deploy Later
 
 This app is ready for services like Render, Railway, Fly.io, or a cloud server.

@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mamelushen Admin</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Arial, "Segoe UI", sans-serif;
+      background: #eef3f4;
+      color: #172024;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    main {
+      width: min(920px, 100%);
+      margin: 0 auto;
+    }
+
+    section {
+      background: #ffffff;
+      border: 1px solid #d6e0e3;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 14px;
+      box-shadow: 0 8px 24px rgba(20, 38, 48, 0.06);
+    }
+
+    h1,
+    h2 {
+      margin: 0 0 12px;
+    }
+
+    label {
+      display: block;
+      margin: 14px 0 6px;
+      font-weight: 700;
+    }
+
+    input {
+      width: min(420px, 100%);
+      box-sizing: border-box;
+      border: 1px solid #b8c5cb;
+      border-radius: 6px;
+      padding: 12px;
+      font-size: 17px;
+    }
+
+    button,
+    a.button {
+      border: 0;
+      border-radius: 6px;
+      padding: 11px 15px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      background: #176a78;
+      color: #ffffff;
+      text-decoration: none;
+      display: inline-block;
+      margin: 10px 8px 0 0;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .card {
+      background: #f6fafb;
+      border: 1px solid #d4e1e4;
+      border-radius: 8px;
+      padding: 14px;
+    }
+
+    .number {
+      display: block;
+      font-size: 32px;
+      font-weight: 800;
+      color: #0f5e68;
+      margin-top: 4px;
+    }
+
+    .status {
+      min-height: 24px;
+      color: #40555b;
+      font-weight: 700;
+    }
+
+    .yiddish {
+      direction: rtl;
+      text-align: right;
+      font-size: 18px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid #e1e8ea;
+      padding: 9px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #f6fafb;
+      color: #485b61;
+    }
+
+    @media (max-width: 700px) {
+      .cards {
+        grid-template-columns: 1fr;
+      }
+
+      body {
+        padding: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section>
+      <h1>Mamelushen Admin</h1>
+      <p>Use this page to download recordings from the online website.</p>
+
+      <label for="passwordInput">Admin password</label>
+      <input id="passwordInput" type="password" autocomplete="current-password">
+
+      <div>
+        <button id="loadButton">Check recordings</button>
+        <button id="downloadButton">Download zip</button>
+      </div>
+
+      <div id="status" class="status"></div>
+    </section>
+
+    <section class="cards">
+      <div class="card">Metadata rows <span id="metadataRows" class="number">0</span></div>
+      <div class="card">Audio files <span id="audioFiles" class="number">0</span></div>
+      <div class="card">Text files <span id="textFiles" class="number">0</span></div>
+    </section>
+
+    <section>
+      <h2>Latest uploads</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Sample</th>
+            <th>Email</th>
+            <th>Text</th>
+          </tr>
+        </thead>
+        <tbody id="latestRows"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script>
+    const passwordInput = document.getElementById("passwordInput");
+    const statusBox = document.getElementById("status");
+    const metadataRows = document.getElementById("metadataRows");
+    const audioFiles = document.getElementById("audioFiles");
+    const textFiles = document.getElementById("textFiles");
+    const latestRows = document.getElementById("latestRows");
+
+    function password() {
+      return encodeURIComponent(passwordInput.value.trim());
+    }
+
+    async function loadSummary() {
+      statusBox.textContent = "Loading...";
+
+      const response = await fetch(`/api/admin/summary?password=${password()}`);
+      const result = await response.json();
+
+      if (!result.ok) {
+        statusBox.textContent = result.error || "Could not load recordings.";
+        return;
+      }
+
+      metadataRows.textContent = result.total_metadata_rows;
+      audioFiles.textContent = result.audio_files;
+      textFiles.textContent = result.text_files;
+      statusBox.textContent = `Upload folder: ${result.upload_folder}`;
+
+      latestRows.innerHTML = result.latest.map(row => `
+        <tr>
+          <td>${row.sample || ""}</td>
+          <td>${row.email || ""}</td>
+          <td class="yiddish">${row.text || ""}</td>
+        </tr>
+      `).join("");
+    }
+
+    function downloadDataset() {
+      if (!passwordInput.value.trim()) {
+        statusBox.textContent = "Type the admin password first.";
+        return;
+      }
+
+      window.location.href = `/api/admin/download-dataset?password=${password()}`;
+    }
+
+    document.getElementById("loadButton").addEventListener("click", loadSummary);
+    document.getElementById("downloadButton").addEventListener("click", downloadDataset);
+  </script>
+</body>
+</html>
