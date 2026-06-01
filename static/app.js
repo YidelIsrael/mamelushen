@@ -47,14 +47,18 @@ function currentUser() {
 function requireLogin() {
   const user = currentUser();
 
-  if (emailLooksValid(user.email) && user.consent) {
+  if (emailLooksValid(user.email) && user.name.trim() && user.consent) {
     accountLabel.textContent = user.name ? `${user.name} (${user.email})` : user.email;
     loginOverlay.classList.add("hidden");
+    updateSubmitButton();
     return;
   }
 
+  loginEmail.value = user.email;
+  loginName.value = user.name;
   loginConsent.checked = user.consent;
   loginOverlay.classList.remove("hidden");
+  updateSubmitButton();
 }
 
 function setStatus(text) {
@@ -63,7 +67,7 @@ function setStatus(text) {
 
 function updateSubmitButton() {
   const user = currentUser();
-  submitButton.disabled = !(recordedBlob && transcriptBox.value.trim() && emailLooksValid(user.email) && user.consent);
+  submitButton.disabled = !(recordedBlob && transcriptBox.value.trim() && emailLooksValid(user.email) && user.name.trim() && user.consent);
 }
 
 function setMode(mode) {
@@ -125,6 +129,11 @@ loginButton.addEventListener("click", () => {
 
   if (!emailLooksValid(email)) {
     loginStatus.textContent = "ביטע שרייב א ריכטיגע אימעיל אדרעס.";
+    return;
+  }
+
+  if (!name) {
+    loginStatus.textContent = "ביטע שרייב דיין נאמען אדער צונאמען.";
     return;
   }
 
@@ -209,7 +218,7 @@ clearButton.addEventListener("click", () => {
 submitButton.addEventListener("click", async () => {
   const user = currentUser();
 
-  if (!emailLooksValid(user.email)) {
+  if (!emailLooksValid(user.email) || !user.name.trim() || !user.consent) {
     loginOverlay.classList.remove("hidden");
     return;
   }
