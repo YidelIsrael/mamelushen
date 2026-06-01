@@ -305,6 +305,11 @@ textarea {
   height: 20px;
 }
 
+.login-consent-row {
+  align-items: flex-start;
+  line-height: 1.35;
+}
+
 audio {
   width: 100%;
   margin-top: 10px;

@@ -1,6 +1,7 @@
 const loginOverlay = document.getElementById("loginOverlay");
 const loginEmail = document.getElementById("loginEmail");
 const loginName = document.getElementById("loginName");
+const loginConsent = document.getElementById("loginConsent");
 const loginButton = document.getElementById("loginButton");
 const loginStatus = document.getElementById("loginStatus");
 const accountLabel = document.getElementById("accountLabel");
@@ -22,7 +23,6 @@ const submitButton = document.getElementById("submitButton");
 const statusBox = document.getElementById("status");
 const audioPreview = document.getElementById("audioPreview");
 const transcriptBox = document.getElementById("transcript");
-const consentBox = document.getElementById("consent");
 const meter = document.getElementById("meter");
 
 let currentSentence = "";
@@ -39,19 +39,21 @@ function emailLooksValid(email) {
 function currentUser() {
   return {
     email: localStorage.getItem("mamelushen_email") || "",
-    name: localStorage.getItem("mamelushen_name") || ""
+    name: localStorage.getItem("mamelushen_name") || "",
+    consent: localStorage.getItem("mamelushen_consent") === "yes"
   };
 }
 
 function requireLogin() {
   const user = currentUser();
 
-  if (emailLooksValid(user.email)) {
+  if (emailLooksValid(user.email) && user.consent) {
     accountLabel.textContent = user.name ? `${user.name} (${user.email})` : user.email;
     loginOverlay.classList.add("hidden");
     return;
   }
 
+  loginConsent.checked = user.consent;
   loginOverlay.classList.remove("hidden");
 }
 
@@ -60,7 +62,8 @@ function setStatus(text) {
 }
 
 function updateSubmitButton() {
-  submitButton.disabled = !(recordedBlob && transcriptBox.value.trim() && consentBox.checked && emailLooksValid(currentUser().email));
+  const user = currentUser();
+  submitButton.disabled = !(recordedBlob && transcriptBox.value.trim() && emailLooksValid(user.email) && user.consent);
 }
 
 function setMode(mode) {
@@ -74,7 +77,6 @@ function setMode(mode) {
   recordedBlob = null;
   audioChunks = [];
   audioPreview.hidden = true;
-  consentBox.checked = false;
 
   if (isSentence) {
     getRandomSentence();
@@ -126,8 +128,14 @@ loginButton.addEventListener("click", () => {
     return;
   }
 
+  if (!loginConsent.checked) {
+    loginStatus.textContent = "ביטע צייכן אן דעם רשות קעסטל.";
+    return;
+  }
+
   localStorage.setItem("mamelushen_email", email);
   localStorage.setItem("mamelushen_name", name);
+  localStorage.setItem("mamelushen_consent", "yes");
   loginStatus.textContent = "";
   requireLogin();
 });
@@ -136,6 +144,7 @@ changeAccountButton.addEventListener("click", () => {
   const user = currentUser();
   loginEmail.value = user.email;
   loginName.value = user.name;
+  loginConsent.checked = user.consent;
   loginOverlay.classList.remove("hidden");
 });
 
@@ -192,7 +201,6 @@ clearButton.addEventListener("click", () => {
   recordedBlob = null;
   audioChunks = [];
   audioPreview.hidden = true;
-  consentBox.checked = false;
   if (currentMode === "free") transcriptBox.value = "";
   setStatus("אויסגעמעקט.");
   updateSubmitButton();
@@ -218,8 +226,9 @@ submitButton.addEventListener("click", async () => {
     return;
   }
 
-  if (!consentBox.checked) {
+  if (!user.consent) {
     setStatus("ביטע צייכן אן דעם רשות קעסטל.");
+    loginOverlay.classList.remove("hidden");
     return;
   }
 
@@ -240,7 +249,7 @@ submitButton.addEventListener("click", async () => {
         email: user.email,
         mode: currentMode,
         source: currentMode === "sentence" ? currentSource : "free-recording",
-        consent: consentBox.checked
+        consent: user.consent
       })
     });
 
@@ -248,7 +257,6 @@ submitButton.addEventListener("click", async () => {
 
     if (result.ok) {
       setStatus("געסעיווט: " + result.sample);
-      consentBox.checked = false;
       if (currentMode === "sentence") {
         await getRandomSentence();
       } else {
@@ -272,7 +280,6 @@ freeModeButton.addEventListener("click", () => setMode("free"));
 newSentenceButton.addEventListener("click", getRandomSentence);
 skipButton.addEventListener("click", getRandomSentence);
 transcriptBox.addEventListener("input", updateSubmitButton);
-consentBox.addEventListener("change", updateSubmitButton);
 
 requireLogin();
 getRandomSentence();

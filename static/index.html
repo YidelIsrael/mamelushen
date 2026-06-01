@@ -28,6 +28,11 @@
       <label for="loginName">נאמען אדער צונאמען</label>
       <input id="loginName" type="text" placeholder="למשל: יוסי">
 
+      <label class="consent-row login-consent-row">
+        <input id="loginConsent" type="checkbox">
+        איך געב רשות צו נוצן מיינע רעקארדירונגען פאר אידישע speech-to-text טרענירונג.
+      </label>
+
       <button id="loginButton">ווייטער</button>
       <div id="loginStatus" class="status"></div>
     </section>
@@ -96,11 +101,6 @@
 
       <label for="transcript">אידישע טעקסט / פארראכטענע טרענסקריפציע</label>
       <textarea id="transcript" placeholder="דער זאץ וועט דא ערשיינען, אדער שרייב גענוי וואס דו האסט געזאגט."></textarea>
-
-      <label class="consent-row">
-        <input id="consent" type="checkbox">
-        איך געב רשות צו נוצן די רעקארדירונג פאר אידישע speech-to-text טרענירונג.
-      </label>
 
       <section class="toolbar">
         <button id="submitButton" disabled>שיק אריין</button>
