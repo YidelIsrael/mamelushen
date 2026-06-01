@@ -290,6 +290,9 @@ def submit_recording():
     if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email):
         return jsonify({"ok": False, "error": "A valid email is required."}), 400
 
+    if not speaker:
+        return jsonify({"ok": False, "error": "Name is required."}), 400
+
     TEXT_FOLDER.mkdir(parents=True, exist_ok=True)
 
     sample_number = next_sample_number()
